@@ -1,0 +1,54 @@
+__host__ __device__ RGB_Color InterpColorSpectrum(const RGB_ColorSpectrum *rgbColorSpectrum, double value, InterpolationKind interpolationKind){
+
+    RGB_Color rgbColor;
+    
+    double step          = 1. / (double) rgbColorSpectrum->numberOfColors;
+    int startPoint       = value / step;
+    int endPoint         = startPoint < (rgbColorSpectrum->numberOfColors - 1) ? startPoint + 1. : startPoint;
+
+    double startRed      = (double) rgbColorSpectrum->rgbColors[(int) startPoint].red;
+    double startGreen    = (double) rgbColorSpectrum->rgbColors[(int) startPoint].green;
+    double startBlue     = (double) rgbColorSpectrum->rgbColors[(int) startPoint].blue;
+
+    double endRed        = (double) rgbColorSpectrum->rgbColors[(int) endPoint].red;
+    double endGreen      = (double) rgbColorSpectrum->rgbColors[(int) endPoint].green;
+    double endBlue       = (double) rgbColorSpectrum->rgbColors[(int) endPoint].blue;
+
+    double maxValueRed   = (double) Max(startRed, endRed);
+    double maxValueGreen = (double) Max(startGreen, endGreen);
+    double maxValueBlue  = (double) Max(startBlue, endBlue);
+
+    value = value - startPoint;
+
+    switch (interpolationKind)
+    {
+    case InterpolationKind::LinearInterp:
+        rgbColor.red = (unsigned char) LinearInterpValue(
+            0, step, 
+            startRed, 
+            endRed, value);
+
+        rgbColor.green = (unsigned char) LinearInterpValue(
+            0, step, 
+            startGreen, 
+            endGreen, value);
+        
+        rgbColor.blue = (unsigned char) LinearInterpValue(
+            0, step, 
+            startBlue, 
+            endBlue, value);
+        break;
+    
+    case InterpolationKind::CubicInterp:
+        
+        break;
+        
+    default:
+        break;
+    }
+
+    //printf("Start: %d, End: %d, Step: %lf, Value: %lf, Red: %d\n", startPoint, endPoint, step, value, rgbColor.red);
+
+    return rgbColor;
+
+}

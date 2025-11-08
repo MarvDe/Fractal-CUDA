@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "stb_image_write.h": "c",
+        "image_o.h": "c",
+        "stdlib.h": "c",
+        "computefractalscuda.h": "c",
+        "time.h": "c",
+        "cuda_computefractals.h": "c",
+        "cuda_color.h": "c",
+        "cuda_image.h": "c"
+    }
+}
