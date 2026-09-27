@@ -1,0 +1,9 @@
+cmake_minimum_required(VERSION 3.8.0...3.10)
+
+list(APPEND SOURCE_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/FractalFormula.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/Mandelbrot.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/Julia.cu
+)
+
+set(SOURCE_FILES ${SOURCE_FILES} PARENT_SCOPE)
