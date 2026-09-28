@@ -18,10 +18,19 @@ class ColorGradientSlider: public QWidget{
     
     Q_OBJECT
 
+    private:
+
+        RGB_ColorSpectrum *spectrum;
+        int selectedHandle = -1;
+
+        int handleWidth = 16;
+        int handleHeightMargin = 10;
+
+        bool wrapAround = true;
+
     public:
-        ColorGradientSlider(QWidget *parent = nullptr) : QWidget(parent){
+        ColorGradientSlider(RGB_ColorSpectrum *spectrum, QWidget *parent = nullptr) : QWidget(parent), spectrum(spectrum){
             setMinimumSize(100, 20);
-            spectrum = new RGB_ColorSpectrum();
         }
 
         void addColorHandle(const ColorHandle &handle){
@@ -54,9 +63,7 @@ class ColorGradientSlider: public QWidget{
             for (int x = 0; x < rect.width(); ++x) {
                 RGB_Color color = InterpColorSpectrum(
                     spectrum,
-                    std::clamp(getValueFromPosition(x), 0.0, 1.0),
-                    InterpolationKind::LinearInterp,
-                    wrapAround
+                    std::clamp(getValueFromPosition(x), 0.0, 1.0)
                 );
 
                 image.setPixel(
@@ -124,7 +131,7 @@ class ColorGradientSlider: public QWidget{
         void mouseReleaseEvent(QMouseEvent *event) override{
             if (event->button() == Qt::MouseButton::LeftButton){
                 selectedHandle = -1;
-                update();
+                update(); 
             }
         }
 
@@ -148,14 +155,6 @@ class ColorGradientSlider: public QWidget{
                 (static_cast<double>(xPos) - static_cast<double>(handleWidth) / 2.0) / 
                 (static_cast<double>(this->rect().width()) - handleWidth); 
         }
-
-        RGB_ColorSpectrum *spectrum;
-        int selectedHandle = -1;
-
-        int handleWidth = 16;
-        int handleHeightMargin = 10;
-
-        bool wrapAround = true;
 
 };
 

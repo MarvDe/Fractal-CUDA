@@ -1,6 +1,5 @@
 #include "mainUI.cuh"
-#include "ColorGradient.h"
-//#include "ProgramControl.h"
+#include "../FractalCompute.cuh"
 
 
 MainUI::MainUI(std::size_t width, std::size_t height, int argc, char **argv){
@@ -40,13 +39,14 @@ void MainUI::setup(int argc, char **argv){
     posYText = new QLineEdit();
     fracLabel = new FractalLabel();
 
-    ColorGradientSlider slider(nullptr);
+    FractalCompute *fractalCompute = new FractalCompute(500, 500);
+    programControl = new ProgramControl(fractalCompute);
+    
+    gradientSlider = new ColorGradientSlider(fractalCompute->getSpectrum());
 
-    programControl = new ProgramControl(imageData, slider.getColorSpectrum());
-
-    slider.addColorHandle(ColorHandle(QColor(1,255,3), 0.0));
-    slider.addColorHandle(ColorHandle(QColor(1,2,255), 0.5));
-    slider.addColorHandle(ColorHandle(QColor(255,0,0), 1.0));
+    // slider.addColorHandle(ColorHandle(QColor(1,255,3), 0.0));
+    // slider.addColorHandle(ColorHandle(QColor(1,2,255), 0.5));
+    // slider.addColorHandle(ColorHandle(QColor(255,0,0), 1.0));
 
     button->setText(QString("Render"));
 
@@ -81,7 +81,7 @@ void MainUI::setup(int argc, char **argv){
     layout->addWidget(zoomText, 0, 1);
     layout->addWidget(posXText, 0, 2);
     layout->addWidget(posYText, 0, 3);
-    layout->addWidget(&slider, 1, 0, 1, 4);
+    layout->addWidget(gradientSlider, 1, 0, 1, 4);
     layout->addWidget(fracLabel, 2, 0, 1, 4);
     
     window->resize(320, 240);

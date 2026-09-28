@@ -8,7 +8,7 @@ __device__ void ApplyColor(unsigned char *pixel, size_t channels, double value, 
     // clip value to [0,1]
     value = max(0.0, min(1.0, value));
 
-    RGB_Color rgbColor = InterpColorSpectrum(rgbColorSpectrum, value, LinearInterp);
+    RGB_Color rgbColor = InterpColorSpectrum(rgbColorSpectrum, value);
 
     switch (channels)
     {
@@ -44,7 +44,19 @@ __device__ void ApplyColor(unsigned char *pixel, size_t channels, double value, 
 
 }
 
-
+/*
+* @param
+*   @param image
+*   @param fractalFormula
+*   @param rgbColorSpecturm
+*   @param zoom Zoom factor of fractal.
+*   @param moveX X position of fractal.
+*   @param moveY Y position of fractal.
+*   @param colorSpectrum
+*
+* @returns
+*   - Returns zero on success and non zero on failure.
+*/
 __global__ void DrawFractal(
     Image *image, 
     IFractalFormula *fractalFormula,
@@ -74,71 +86,133 @@ __global__ void DrawFractal(
 
 }
 
-__host__ int DrawImage(
-    Image *image,
-    RGB_ColorSpectrum *rgbColorSpectrum, 
-    IFractalFormula *deviceFractalFormula,
-    double zoom,
-    double moveX,
-    double moveY){
-    
-    int returnCode = 0;
 
-    int blockSize = 256;
-    int gridSize = (image->width * image->height + blockSize - 1) / blockSize;
+FractalCompute::FractalCompute(int width, int height, int channels){
+    unsigned char *data = new unsigned char[width * height * channels];
+    image = new Image(width, height, channels, data);
     
-    unsigned char *deviceData = nullptr;
-    Image hostImage = {image->width, image->height, image->channels, NULL};
-    RGB_ColorSpectrum *deviceRgbColorSpectrum = nullptr;
-     Image *deviceImage = nullptr;
+    spectrum = new RGB_ColorSpectrum();
+    spectrum->numberOfColors = 2;
+    spectrum->positionOfColors[0] = 0.0;
+    spectrum->positionOfColors[0] = 1.0;
+    spectrum->rgbColors[0] = RGB_Color{
+        static_cast<unsigned char>(0), 
+        static_cast<unsigned char>(0),
+        static_cast<unsigned char>(0)
+    };
+    spectrum->rgbColors[0] = RGB_Color{
+        static_cast<unsigned char>(255),
+        static_cast<unsigned char>(255),
+        static_cast<unsigned char>(255)
+    };
+    updateDeviceSpectrum = true;
 
-    // initialize color spectrum
+    Image hostImage = {width, height, channels, NULL};
     if (cudaMalloc(&deviceData, image->width * image->height * image->channels * sizeof(unsigned char)) != cudaError::cudaSuccess){
-        returnCode = 1;
-        goto FreeData;
+        isError = true; 
+        return;
     }
-
     hostImage.data = deviceData;
-   
     if (cudaMalloc(&deviceImage, sizeof(Image)) != cudaError::cudaSuccess || 
         cudaMemcpy(deviceImage, &hostImage, sizeof(Image), cudaMemcpyHostToDevice) != cudaError::cudaSuccess){
-        returnCode = 1;
-        goto FreeImage;
+        isError = true;
+        return;
     }
 
-    if (cudaMalloc(&deviceRgbColorSpectrum, sizeof(RGB_ColorSpectrum)) != cudaError::cudaSuccess ||
-        cudaMemcpy(deviceRgbColorSpectrum, rgbColorSpectrum, sizeof(RGB_ColorSpectrum), cudaMemcpyHostToDevice) != cudaError::cudaSuccess) {
-        returnCode = 1;
-        goto FreeSpectrum;
+    if (cudaMalloc(&deviceSpectrum, sizeof(RGB_ColorSpectrum)) != cudaError::cudaSuccess) {
+        isError = true;
+        return;
     }
 
-    std::cout << "starting kernel" << std::endl;
+    setFractalFormula(Mandelbrot());
 
-    // Call kernel function
+}
+FractalCompute::~FractalCompute(){
+
+    delete image->data;
+    delete image;
+    delete spectrum;
+    destroyFormula(deviceFractalFormula);
+    cudaFree(deviceSpectrum);
+    cudaFree(deviceImage);
+    cudaFree(deviceData);
+}
+
+void FractalCompute::calculate(double zoom, double posX, double posY){
+    
+    int returnCode = 0;
+    int blockSize = 256;
+    int gridSize = (image->width * image->height + blockSize - 1) / blockSize;
+
+    if (updateDeviceSpectrum){
+        if (cudaMemcpy(deviceSpectrum, spectrum, sizeof(RGB_ColorSpectrum), cudaMemcpyHostToDevice) != cudaError::cudaSuccess) {
+            isError = true;
+            return;
+        }
+        updateDeviceSpectrum = false;
+    }
+
+    std::cout << "Starting Kernel, zoom: " << zoom << " x: " << posX << " y: " << posY << std::endl;
+
     DrawFractal <<< gridSize, blockSize >>> (
         deviceImage,
         deviceFractalFormula,
         zoom,
-        moveX, 
-        moveY, 
-        deviceRgbColorSpectrum);
+        posX, 
+        posY, 
+        deviceSpectrum);
 
-    
     cudaDeviceSynchronize();
     
-    std::cout << "finished kernel" << std::endl;
+    updateHostImage = true;
+    std::cout << "Error state: " << isError << std::endl;
+}
 
-    // Copy device image data to host image
-    if (cudaMemcpy(image->data, deviceData, image->width * image->height * image->channels, cudaMemcpyDeviceToHost) != cudaError::cudaSuccess)  {
-        returnCode = 1;   
+Image *FractalCompute::getImage(){
+
+    if (updateHostImage){
+        if (cudaMemcpy(image->data, deviceData, image->width * image->height * image->channels, cudaMemcpyDeviceToHost) != cudaError::cudaSuccess)  {
+            isError = true;
+            return NULL;   
+        }
+        updateHostImage = false;
     }
 
-    FreeSpectrum:
-    cudaFree(deviceRgbColorSpectrum);
-    FreeImage:
-    cudaFree(deviceImage);
-    FreeData:
-    cudaFree(deviceData);
+    return image;
+}
 
-    return returnCode;
+void FractalCompute::setSpectrum(const RGB_ColorSpectrum &i_specturm){
+    spectrum->interpolationKind = i_specturm.interpolationKind;
+    spectrum->numberOfColors = i_specturm.numberOfColors;
+    spectrum->wrapAround = i_specturm.wrapAround;
+    for (int i = 0; i < i_specturm.numberOfColors; i++){
+
+        spectrum->positionOfColors[i] = i_specturm.positionOfColors[i];
+        spectrum->rgbColors[i].red = i_specturm.rgbColors[i].red;
+        spectrum->rgbColors[i].green = i_specturm.rgbColors[i].green;
+        spectrum->rgbColors[i].blue = i_specturm.rgbColors[i].blue;
+
+    }
+    updateDeviceSpectrum = true;
+}
+
+RGB_ColorSpectrum *FractalCompute::getSpectrum(){
+    return spectrum;
+}
+
+void FractalCompute::setFractalFormula(const IFractalFormula &i_formula){
+
+    switch (i_formula.getType())
+    {
+    case FRACTAL_TYPES::MANDELBROT:
+        deviceFractalFormula = createFormula<Mandelbrot>();
+        break;
+    case FRACTAL_TYPES::JULIA:
+        deviceFractalFormula = createFormula<Julia>();
+        break;
+    default:
+        std::cout << "Formula Not Implemented" << std::endl;
+        break;
+    }
+
 }

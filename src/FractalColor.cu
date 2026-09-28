@@ -61,10 +61,11 @@ __host__ __device__ T CubicInterpValue(T startPoint, T endPoint,
 }
 
 
-__host__ __device__ RGB_Color InterpColorSpectrum(const RGB_ColorSpectrum *rgbColorSpectrum, double value, InterpolationKind interpolationKind, bool wrapAround){
+__host__ __device__ RGB_Color InterpColorSpectrum(const RGB_ColorSpectrum *rgbColorSpectrum, double value){
 
     RGB_Color rgbColor;
-    
+    InterpolationKind interpolationKind = rgbColorSpectrum->interpolationKind;
+    bool wrapAround = rgbColorSpectrum->wrapAround;
     double startPoint   = 0.0;
     double endPoint     = rgbColorSpectrum->positionOfColors[rgbColorSpectrum->numberOfColors - 1];
     int startIndex      = 0;

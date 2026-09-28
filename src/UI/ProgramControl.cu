@@ -1,18 +1,20 @@
 #include "ProgramControl.h"
+#include "../ImageO.cuh"
 
 #include "../Formulas/Mandelbrot.cuh"
-#include "../FractalCompute.cuh"
 
 void ProgramControl::onCalculateClicked(){
-    std::cout << "click" << std::endl;
 
-    int ret = callDrawImage<Mandelbrot>(
-        image, 
-        spectrum,
-        zoom,
-        posX,
-        posY
-    );
+    fractalCompute->calculate(zoom, posX, posY);
+    Image *image = fractalCompute->getImage();
+
+    // WriteImageToFile(
+    //     image->width,
+    //     image->height,
+    //     image->channels,
+    //     image->data,
+    //     "image.png"
+    // );
 
     emit rendered(image);
 

@@ -10,10 +10,16 @@
 #include <string>
 #include <stdexcept>
 
-CUDA_HOST_DEVICE class IFractalFormula{
+enum FRACTAL_TYPES{
+    MANDELBROT,
+    JULIA
+};
+
+class IFractalFormula{
  
     public:
         CUDA_HOST_DEVICE virtual double calculate(double x, double y) const = 0;
+        CUDA_HOST_DEVICE virtual FRACTAL_TYPES getType() const = 0;
         CUDA_HOST_DEVICE virtual ~IFractalFormula() = default;
 
 };

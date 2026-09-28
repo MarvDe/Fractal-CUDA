@@ -20,3 +20,7 @@ double Julia::calculate(double x, double y) const{
     double output = static_cast<double>(index) / static_cast<double>(iterations); 
     return output;
 } 
+
+FRACTAL_TYPES Julia::getType() const{
+    return FRACTAL_TYPES::JULIA;
+}

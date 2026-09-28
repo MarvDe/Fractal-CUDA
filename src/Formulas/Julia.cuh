@@ -17,7 +17,8 @@ class Julia: public IFractalFormula{
         double cy = 0.0;
 
     public:
-        CUDA_HOST_DEVICE Julia(double cx, double cy);
+        CUDA_HOST_DEVICE Julia(double cx = 0.0, double cy = 0.0);
+        CUDA_HOST_DEVICE virtual FRACTAL_TYPES getType() const override;
         CUDA_HOST_DEVICE virtual double calculate(double x, double y) const override;
 
 };

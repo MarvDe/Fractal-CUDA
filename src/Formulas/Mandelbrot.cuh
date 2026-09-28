@@ -16,6 +16,7 @@ class Mandelbrot: public IFractalFormula{
 
     public:
         CUDA_HOST_DEVICE Mandelbrot();
+        CUDA_HOST_DEVICE virtual FRACTAL_TYPES getType() const override;
         CUDA_HOST_DEVICE virtual double calculate(double x, double y) const override;
 
 };

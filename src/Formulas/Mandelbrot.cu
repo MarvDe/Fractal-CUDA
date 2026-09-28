@@ -20,3 +20,7 @@ double Mandelbrot::calculate(double x, double y) const{
     double output = static_cast<double>(index) / static_cast<double>(iterations); 
     return output;
 }
+
+FRACTAL_TYPES Mandelbrot::getType() const{
+    return FRACTAL_TYPES::MANDELBROT;
+}

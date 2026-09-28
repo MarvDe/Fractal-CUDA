@@ -3,8 +3,15 @@
 
 #include "IFractalFormula.cuh"
 
+#ifdef __CUDACC__
+    #define CUDA_GLOBAL __global__
+#else
+    #define CUDA_GLOBAL
+#endif
+
+
 template <typename T, typename ...Args>
-__global__ void _createFormula(IFractalFormula **fractalFormula, Args... args){
+CUDA_GLOBAL void _createFormula(IFractalFormula **fractalFormula, Args... args){
     *fractalFormula = new T(args...);
 }
 
@@ -71,5 +78,7 @@ IFractalFormula* createFormula(Args... args)
 //__global__ void _destroyFormula(IFractalFormula *fractalFormula);
 
 void destroyFormula(IFractalFormula *fractalFormula);
+
+#undef CUDA_GLOBAL
 
 #endif

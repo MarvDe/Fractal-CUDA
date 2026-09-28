@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "../Image.cuh"
+#include "../IFractalCompute.h"
 
 #include <qt6/QtCore/QObject>
 
@@ -13,26 +14,10 @@ class ProgramControl: public QObject{
 
     public:
 
-        ProgramControl(Image *image, RGB_ColorSpectrum *specturm) : image(image), spectrum(specturm){}
-        ProgramControl(){
-
-            unsigned char *data = new unsigned char[500 * 500 * 3];
-
-            image = new Image(
-                500, 
-                500, 
-                3, 
-                data
-            );
-        }
-
-        ~ProgramControl(){
-            delete[] image->data;
-            delete image;
-        }
+        ProgramControl(IFractalCompute *fractalCompute) : fractalCompute(fractalCompute){}
 
         Image *getImage(){
-            return image;
+            return fractalCompute->getImage();
         }
 
     public slots:
@@ -49,8 +34,7 @@ class ProgramControl: public QObject{
 
     private:
         
-        Image *image;
-        RGB_ColorSpectrum *spectrum;
+        IFractalCompute *fractalCompute;
         double zoom = 1.0;
         double posX = 0.0;
         double posY = 0.0;

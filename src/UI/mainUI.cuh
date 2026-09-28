@@ -6,6 +6,7 @@
 #include "../Image.cuh"
 #include "FractalLabel.h"
 #include "ProgramControl.h"
+#include "ColorGradient.h"
 
 #include <qt6/QtWidgets/QtWidgets>
 #include <qt6/QtWidgets/QApplication>
@@ -26,6 +27,7 @@ class MainUI{
         QLineEdit *posXText;
         QLineEdit *posYText;
         FractalLabel *fracLabel;
+        ColorGradientSlider *gradientSlider;
         QImage *image;
         Image *imageData;
         ProgramControl *programControl;

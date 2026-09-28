@@ -20,20 +20,25 @@ CUDA_HOST_DEVICE enum InterpolationKind{
 /*
 * A simple rgb color structure.
 */
-CUDA_HOST_DEVICE struct {
+CUDA_HOST_DEVICE struct RGB_Color{
     unsigned char red;
     unsigned char green;
     unsigned char blue;
-} typedef RGB_Color;
+};
 
 
 /*
 * RGB_ColorSpectrum is a type which.
 */
 CUDA_HOST_DEVICE struct RGB_ColorSpectrum{
-    RGB_ColorSpectrum() : numberOfColors(0) {}
-    RGB_ColorSpectrum(size_t numberOfColors, RGB_Color *rgbColors, double *positionOfColors) : 
-        numberOfColors(numberOfColors)
+    RGB_ColorSpectrum() : numberOfColors(0), wrapAround(false), interpolationKind(InterpolationKind::LinearInterp) {}
+    RGB_ColorSpectrum(
+        size_t numberOfColors, 
+        RGB_Color *rgbColors, 
+        double *positionOfColors, 
+        bool wrapAround = false, 
+        InterpolationKind interpolationKind = InterpolationKind::LinearInterp) : 
+        numberOfColors(numberOfColors), wrapAround(wrapAround), interpolationKind(interpolationKind)
     {  
         for (int i = 0; i < numberOfColors; i++){
             this->rgbColors[i].red = rgbColors[i].red;
@@ -46,8 +51,9 @@ CUDA_HOST_DEVICE struct RGB_ColorSpectrum{
     size_t numberOfColors;
     RGB_Color rgbColors[MAX_COLORS_IN_COLORSPECTRUM];
     double positionOfColors[MAX_COLORS_IN_COLORSPECTRUM];
+    bool wrapAround;
+    InterpolationKind interpolationKind;
 };
-
 
 /*
 * @param 
@@ -77,7 +83,7 @@ void DeinitRGB_ColorSpectrum(RGB_ColorSpectrum *rgbColorSpectrum);
 * @returns
 *   - Returns the interpolated color of the color spectrum.
 */
-CUDA_HOST_DEVICE RGB_Color InterpColorSpectrum(const RGB_ColorSpectrum *rgbColorSpectrum, double value, InterpolationKind interpolationKind, bool wrapAround = false);
+CUDA_HOST_DEVICE RGB_Color InterpColorSpectrum(const RGB_ColorSpectrum *rgbColorSpectrum, double value);
 
 #undef CUDA_HOST_DEVICE
 

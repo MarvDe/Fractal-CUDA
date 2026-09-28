@@ -1,64 +1,42 @@
 #ifndef COMPUTE_FRACTALS_CUDA_H
 #define COMPUTE_FRACTALS_CUDA_H
 
-
-#ifdef __CUDACC__
-    #define CUDA_HOST __host__
-#else
-    #define CUDA_HOST
-#endif
-
-
 #include <iostream>
 #include <stdlib.h>
+#include "IFractalCompute.h"
 #include "FractalColor.cuh"
 #include "Formulas/FractalFormula.cuh"
+#include "Formulas/Mandelbrot.cuh"
+#include "Formulas/Julia.cuh"
 #include "Image.cuh"
 
-/*
-* @param
-*   @param image
-*   @param rgbColorSpecturm
-*   @param fractalFormula
-*   @param zoom Zoom factor of fractal.
-*   @param moveX X position of fractal.
-*   @param moveY Y position of fractal.
-*
-* @returns
-*   - Returns zero on success and non zero on failure.
-*/
-CUDA_HOST int DrawImage(
-    Image *image,
-    RGB_ColorSpectrum *rgbColorSpectrum, 
-    IFractalFormula *fractalFormula,
-    double zoom,
-    double moveX,
-    double moveY
-);
+class FractalCompute: public IFractalCompute{
 
-template <typename Formula, typename ...Args>
-CUDA_HOST int callDrawImage(
-    Image *image,
-    RGB_ColorSpectrum *rgbColorSpectrum,
-    double zoom,
-    double moveX,
-    double moveY,
-    Args... args
-){
+    private:
+        Image *image;
+        Image *deviceImage;
+        unsigned char *deviceData;
+        bool isError = false;
+        bool updateHostImage = false; 
+        RGB_ColorSpectrum *spectrum;
+        RGB_ColorSpectrum *deviceSpectrum;
+        bool updateDeviceSpectrum = false;
+        IFractalFormula *deviceFractalFormula;
 
-    IFractalFormula *formula = createFormula<Formula, Args...>(args...);
+    public:
+        FractalCompute(int width, int height, int channels = 3);
+        ~FractalCompute();
 
-    return DrawImage(
-        image,
-        rgbColorSpectrum,
-        formula,
-        zoom,
-        moveX,
-        moveY
-    );
+        void calculate(double zoom, double posX, double posY);
 
-}
+        Image *getImage();
 
-#undef CUDA_HOST
+        void setSpectrum(const RGB_ColorSpectrum &i_specturm);
+
+        RGB_ColorSpectrum *getSpectrum();
+
+        void setFractalFormula(const IFractalFormula &formula);
+
+};
 
 #endif
